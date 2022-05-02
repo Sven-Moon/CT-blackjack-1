@@ -39,7 +39,6 @@ class Blackjack:
                 print(f"You said \"{ans}\"... I don't get it.")     
                 sleep(2)       
         
-        
     def runRound(self):
         # If shuffle, Dealer shuffles deck
         if self.deck.shuffleFlag:
@@ -48,64 +47,19 @@ class Blackjack:
             self.deck.insertBlank()
         self.betting()    
         
-        self.initialDeal()        
+        self.initialDeal()
         
-        # if Player cards are 21, 
-        if self.cardTotal(self.player.hand) == 21:  
-            # if Dealer cards != 21:          
-            if self.cardTotal(self.dealer.hand) != 21:
-                 # round ends and Player gains bet + 1.5x bet
-                print('Natural Blackjack!')
-                print(f"Here, take your winnings: ${self.player.bet*2.5}")
-                self.player.settle(int(self.player.bet*2.5))
-                self.cleanup()
-                self.wait()
-                return
-            else: # else Player receives bet back                
-                print('Draw')
-                self.player.settle(self.player.bet)                    
-                return  # round ends
+        if not self.evalForBlackjack():
+            return
         
-        # Player draw
-        while True:
-            choice = self.displayOptions()
-            # player chooses to stand or hit
-                # Hit: Player is dealt a card
-            if choice == 'h':
-                self.player.takeTopCard(self.deck)
-                self.displayHands()
-                    # if Player card total is > 21
-                if self.cardTotal(self.player.hand) > 21:
-                    print(f"\n{self.cardTotal(self.player.hand)} ... You busted.")
-                    self.cleanup()
-                    self.wait()
-                    return
-                    # hand is bust - end round
-                # Stand: Player turn (for hand) ends                    
-            elif choice == 'd':
-                self.player.double_down()
-                self.player.takeTopCard(self.deck)
-                self.displayHands()
-                sleep(2)
-                break
-            elif choice == 's':
-                break
-            elif choice == 'p':
-                pass
-                    # Yes Split: 
-                        # Player now has two hands, each played separately
-                        # hand 2 is played after hand 1 
-                        # 21 receives 1x bet rather than 1.5x           
-               
+        if not self.playerDraw():
+            return
+        
         self.dealerDraw() 
         
         self.resolveRound()       
-        
-    # End Round
-        
-        
-    # Start methods
-    
+
+    # runRound methods    
     def betting(self):
         while True:
             clear()
@@ -131,8 +85,58 @@ class Blackjack:
         self.dealer.takeTopCard(self.deck)
         self.displayHands()  
         sleep(1)
+    
+    def evalForBlackjack(self):
+        # if Player cards are 21, 
+        if self.cardTotal(self.player.hand) == 21:  
+            # if Dealer cards != 21:          
+            if self.cardTotal(self.dealer.hand) != 21:
+                 # round ends and Player gains bet + 1.5x bet
+                print('Natural Blackjack!')
+                print(f"Here, take your winnings: ${self.player.bet*2.5}")
+                self.player.settle(int(self.player.bet*2.5))
+                self.cleanup()
+                self.wait()
+                return False
+            else: # else Player receives bet back                
+                print('Draw')
+                self.player.settle(self.player.bet)            
+                self.cleanup() 
+                return False # round ends
+        return True
         
-        
+    def playerDraw(self):
+        while True:
+            choice = self.displayOptions()
+            # player chooses to stand or hit
+                # Hit: Player is dealt a card
+            if choice == 'h':
+                self.player.takeTopCard(self.deck)
+                self.displayHands()
+                    # if Player card total is > 21
+                if self.cardTotal(self.player.hand) > 21:
+                    print(f"\n{self.cardTotal(self.player.hand)} ... You busted.")
+                    self.cleanup()
+                    self.wait()
+                    return False
+                    # hand is bust - end round
+                # Stand: Player turn (for hand) ends                    
+            elif choice == 'd':
+                self.player.double_down()
+                self.player.takeTopCard(self.deck)
+                self.displayHands()
+                sleep(2)
+                break
+            elif choice == 's':
+                break
+            elif choice == 'p':
+                pass
+                    # Yes Split: 
+                        # Player now has two hands, each played separately
+                        # hand 2 is played after hand 1 
+                        # 21 receives 1x bet rather than 1.5x 
+        return True
+    
     def cardTotal(self, hand):
         """
         Input: array of card names
